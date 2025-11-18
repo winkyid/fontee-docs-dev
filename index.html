@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fontee Documentation</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body {
+      margin: 0;
+      background: #0e0e0e;
+      color: #f5f5f5;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+    #sidebar {
+      width: 270px;
+      background: #161616;
+      padding: 20px;
+      border-right: 1px solid #222;
+      overflow-y: auto;
+    }
+    #content {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+    .file-item {
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .file-item:hover {
+      background: #222;
+    }
+    pre code {
+      background: #111;
+      padding: 10px;
+      display: block;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    a { color: #7ab7ff; }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <h2><i class="fa-solid fa-book"></i> Fontee Docs</h2>
+    <div id="fileList">Loading...</div>
+  </div>
+
+  <div id="content"><h2>Welcome to Fontee Documentation</h2><p>Select a file to view.</p></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+  <script>
+    async function loadDirectory() {
+      try {
+        const res = await fetch(".");
+        const html = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const links = [...doc.querySelectorAll("a")];
+
+        const mdFiles = links
+          .map(a => a.getAttribute("href"))
+          .filter(h => h && h.endsWith('.md'));
+
+        const list = document.getElementById("fileList");
+        list.innerHTML = "";
+
+        mdFiles.forEach(name => {
+          const div = document.createElement("div");
+          div.className = "file-item";
+          div.innerHTML = `<i class='fa-solid fa-file-lines'></i> ${name}`;
+          div.onclick = () => loadFile(name);
+          list.appendChild(div);
+        });
+
+        if (mdFiles.length === 0) list.innerHTML = "Tidak ada file .md";
+      } catch (e) {
+        document.getElementById("fileList").textContent = "Gagal load folder.";
+      }
+    }
+
+    async function loadFile(name) {
+      const res = await fetch(name);
+      const text = await res.text();
+      document.getElementById("content").innerHTML = marked.parse(text);
+    }
+
+    loadDirectory();
+  </script>
+</body>
+</html>
